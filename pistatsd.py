@@ -5,17 +5,14 @@ from multiprocessing.pool import ThreadPool
 import json
 
 
-
-
 pool = ThreadPool(processes=2)
 
-
-
+	
 def createJSON():
 	cpuUsageThread = pool.apply_async(cpuUsage)
 	netUsageThread= pool.apply_async(netUsage)
-	#cpuUsaged = cpuUsage()
-	#netUsaged = netUsage()
+	cpuUsaged = cpuUsage()
+	netUsaged = netUsage()
 	cpuUsaged = cpuUsageThread.get()
 	netUsaged = netUsageThread.get()
 
@@ -27,7 +24,7 @@ def createJSON():
 def cpuUsage():
 	with open('/proc/uptime', 'r') as uptime:
 		time1 = uptime.readline().split()
-		time.sleep(2)
+		time.sleep(1)
 		uptime.seek(0)
 		time2 = uptime.readline().split()
 
@@ -60,7 +57,6 @@ def netUsage():
 			read2 = read2.split()
 			interface = read1[0][:-1]
 			rxBytes.append(int(read1[1]))
-			#print read1
 			rxBytes.append(int(read2[1]))
 			txBytes.append(int(read1[9]))
 			txBytes.append(int(read2[9]))
@@ -68,5 +64,5 @@ def netUsage():
 
 		return interfaces
 while True:
-	createJSON()
+	print createJSON()
 	time.sleep(1)
