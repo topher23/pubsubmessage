@@ -87,7 +87,7 @@ try:
     # The credentials to use
     credentials = None
     # The topic to subscribe to
-    topic = 'hello'
+    queue = 'ece4564'
 
     # Setup signal handlers to shutdown this app when SIGINT or SIGTERM is
     # sent to this app
@@ -105,11 +105,13 @@ try:
 """
     parser = argparse.ArgumentParser(description = "Parses network and CPU statistics and publishes to RabbitMQ Server")
     parser.add_argument("-b", "--messagebroker",  help="This is the IP address or named address of the message broker to connect to", required=True)
-    parser.add_argument("-p", "--virtualhost", help="This is the virtual host to connect to on the message broker. If not specified, should default to the root virtual host", required=True)
+    parser.add_argument("-p", "--virtualhost", help="This is the virtual host to connect to on the message broker. If not specified, should default to the root virtual host")
     parser.add_argument("-c", help="Use the given credentials when connecting to the message broker. The format is 'login:password'. If not specified, should default to a guest login.", required=True)
     parser.add_argument("-k", "--routingkey", help="The routing key to use when publishing messages to the message broker", required=True)
     args = parser.parse_args()
 
+    if args.virtualhost is None:
+    	print "we here"
     # Ensure that the user specified the required arguments
     if host is None:
         print "You must specify a message broker to connect to"
@@ -130,16 +132,18 @@ try:
 
         connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
         channel = connection.channel()
-        channel.queue_declare(queue='ece4564')
+        channel.queue_declare(queue=queue)
 
 
         # Loop until the application is asked to quit
-        while(publish_stats):
+        while(1):
             jsonsend = createJSON()
+            if args.routingkey == 
             channel.basic_publish(exchange='',
-                    routing_key='ece4564',
+                    routing_key=queue,
                     body=jsonsend)
             time.sleep(1)
+            print jsonsend
 
     except pika.exceptions.AMQPError, ae:
         print "Error: An AMQP Error occured: " + ae.message
@@ -151,15 +155,15 @@ try:
         print "Error: An unexpected exception occured: " + eee.message
 
     finally:
-        connection.close()
         # TODO: Attempt to gracefully shutdown the connection to the message broker
-        connection.close()
+        
         # For closing the channel gracefully see: http://pika.readthedocs.org/en/0.9.14/modules/channel.html#pika.channel.Channel.close
         if channel is not None:
             channel.close()
         # For closing the connection gracefully see: http://pika.readthedocs.org/en/0.9.14/modules/connection.html#pika.connection.Connection.close
         if message_broker is not None:
             message_broker.close()
+        connection.close()
 except ValueError:
     print "you dun fucked up"
 #except Exception, ee:
