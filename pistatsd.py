@@ -87,7 +87,7 @@ try:
     # The credentials to use
     credentials = None
     # The topic to subscribe to
-    queue = 'ece4564'
+    topic = 'ece4564'
 
     # Setup signal handlers to shutdown this app when SIGINT or SIGTERM is
     # sent to this app
@@ -110,10 +110,9 @@ try:
     parser.add_argument("-k", "--routingkey", help="The routing key to use when publishing messages to the message broker", required=True)
     args = parser.parse_args()
 
-    if args.virtualhost is None:
-    	print "we here"
+    key = args.routingkey
     # Ensure that the user specified the required arguments
-    if host is None:
+    if args.messagebroker is None:
         print "You must specify a message broker to connect to"
         sys.exit()
 
@@ -130,18 +129,15 @@ try:
 
         # TODO: Setup the channel and exchange
 
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', virtual_host=vhost))
         channel = connection.channel()
-        channel.queue_declare(queue=queue)
-
+        etype='pi_utilization'
+        channel.exchange_declare(exchange=etype,type='direct')
 
         # Loop until the application is asked to quit
         while(1):
             jsonsend = createJSON()
-            if args.routingkey == 
-            channel.basic_publish(exchange='',
-                    routing_key=queue,
-                    body=jsonsend)
+            channel.basic_publish(exchange=etype,routing_key=key,body=jsonsend)
             time.sleep(1)
             print jsonsend
 
