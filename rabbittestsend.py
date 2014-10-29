@@ -1,15 +1,15 @@
-import pistatsd
 import pika
+import sys
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(
-        'localhost'))
+key='ece4564'
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', virtual_host=vhost))
 channel = connection.channel()
-channel.queue_declare(queue='hello')
+etype='pi_utilization'
+channel.exchange_declare(exchange=etype,type='direct')
 
-channel.basic_publish(exchange='',
-                                        routing_key='hello',
-                                        body='helloworld!')
-print " [x] helloworld has been sent"
-connection.close()
-
-print pistatsd.createJSON()
+# Loop until the application is asked to quit
+while(1):
+    jsonsend = "helloworld"
+    channel.basic_publish(exchange=etype,routing_key=key,body=jsonsend)
+    time.sleep(1)
+connection.close

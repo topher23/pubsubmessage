@@ -144,9 +144,7 @@ try:
     credentials = None
     # The topic to subscribe to
     topic = None
-
-    queue = 'ece4564'
-
+    
     # TODO: Parse the command line arguments
     parser = argparse.ArgumentParser(description = "Parses network and CPU statistics and publishes to RabbitMQ Server")
     parser.add_argument("-b", "--messagebroker",  help="This is the IP address or named address of the message broker to connect to", required=True)
@@ -224,7 +222,7 @@ try:
         def callback(ch, method, properties, body):
             print " [x] %r:%r" % (method.routing_key, body,)
 
-        channel.basic_consume(callback, queue = queue, no_ack=True)
+        channel.basic_consume(callback, queue = qname, no_ack=True)
         channel.start_consuming()
 
 
