@@ -123,17 +123,7 @@ def on_new_msg(channel, delivery_info, msg_properties, msg):
 # ^^^^^^^^^^^^^^^^^^^^^^^
 
 # Guard try clause to catch any errors that aren't expected
-try:
-
-    # The message broker host name or IP address
-    host = None
-    # The virtual host to connect to
-    vhost = "/" # Defaults to the root virtual host
-    # The credentials to use
-    credentials = None
-    # The topic to subscribe to
-    topic = None
-    
+try:    
     # TODO: Parse the command line arguments
     parser = argparse.ArgumentParser(description = "Parses network and CPU statistics and publishes to RabbitMQ Server")
     parser.add_argument("-b", "--messagebroker",  help="This is the IP address or named address of the message broker to connect to", required=True)
@@ -142,20 +132,18 @@ try:
     parser.add_argument("-k", "--routingkey", help="The routing key to use when publishing messages to the message broker", required=True)
     args = parser.parse_args()
 
-    fullcred = args.c
-    fullcred = fullcred.split(':')
-    # Ensure that the user specified the required arguments
+    vhost = "/"
+    etype='pi_utilization'
     key = args.routingkey
-    if args.messagebroker is None:
-        print "You must specify a message broker to connect to"
-        sys.exit()
+    ipaddr = args.messagebroker
+    fullcred = ['guest', 'guest']
+    if args.c is not None:
+        fullcred = args.c.split(':')
+        print fullcred
+    if args.virtualhost is not None:
+    	print "cusotom virtual host"
+    	vhost = args.virtualhost
 
-    if args.routingkey is None:
-        print "You must specify a topic to subscribe to"
-        sys.exit()
-
-    message_broker = None
-    channel = None
     try:
         # TODO: Connect to the message broker using the given broker address (host)
         # Use the virtual host (vhost) and credential information (credentials),
@@ -196,11 +184,10 @@ try:
         #       new message event handler
         """
         # TODO: Start pika's event loop
-        print "here"
-        etype='pi_utilization'
         credentials = pika.PlainCredentials(fullcred[0], fullcred[1])
-        cxn = pika.ConnectionParameters(host='localhost', credentials=credentials)
-        connection = pika.BlockingConnection(cxn)
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', 
+        	                                        credentials=credentials,
+        	                                        virtual_host=vhost))
         channel = connection.channel()
 
 
@@ -216,8 +203,6 @@ try:
 
         channel.basic_consume(on_new_msg, queue = qname, no_ack=True)
         channel.start_consuming()
-
-
 
     except pika.exceptions.AMQPError, ae:
         print "Error: An AMQP Error occured: " + ae.message

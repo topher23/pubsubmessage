@@ -66,29 +66,7 @@ def netUsage():
 
         return interfaces
 
-
-
-
-
-
-
-
-
-
-
-
-
 try:
-
-    # The message broker host name or IP address
-    host = 'localhost'
-    # The virtual host to connect to
-    vhost = "/" # Defaults to the root virtual host
-    # The credentials to use
-    credentials = None
-    # The topic to subscribe to
-    topic = 'ece4564'
-
     # Setup signal handlers to shutdown this app when SIGINT or SIGTERM is
     # sent to this app
     # For more info about signals, see: https://scholar.vt.edu/portal/site/0a8757e9-4944-4e33-9007-40096ecada02/page/e9189bdb-af39-4cb4-af04-6d263949f5e2?toolstate-701b9d26-5d9a-4273-9019-dbb635311309=%2FdiscussionForum%2Fmessage%2FdfViewMessageDirect%3FforumId%3D94930%26topicId%3D3507269%26messageId%3D2009512
@@ -106,35 +84,25 @@ try:
     parser = argparse.ArgumentParser(description = "Parses network and CPU statistics and publishes to RabbitMQ Server")
     parser.add_argument("-b", "--messagebroker",  help="This is the IP address or named address of the message broker to connect to", required=True)
     parser.add_argument("-p", "--virtualhost", help="This is the virtual host to connect to on the message broker. If not specified, should default to the root virtual host")
-    parser.add_argument("-c", help="Use the given credentials when connecting to the message broker. The format is 'login:password'. If not specified, should default to a guest login.", required=True)
+    parser.add_argument("-c", help="Use the given credentials when connecting to the message broker. The format is 'login:password'. If not specified, should default to a guest login.")
     parser.add_argument("-k", "--routingkey", help="The routing key to use when publishing messages to the message broker", required=True)
     args = parser.parse_args()
 
-    fullcred = args.c
-    fullcred = fullcred.split(':')
-    print fullcred
+    vhost = "/"
+    etype='pi_utilization'
     key = args.routingkey
-    # Ensure that the user specified the required arguments
-    if args.messagebroker is None:
-        print "You must specify a message broker to connect to"
-        sys.exit()
+    ipaddr = args.messagebroker
+    fullcred = ['guest', 'guest']
+    if args.c is not None:
+        fullcred = args.c.split(':')
+        print fullcred
 
-    if topic is None:
-        print "You must specify a topic to subscribe to"
-        sys.exit()
-
-    message_broker = None
-    channel = None
     try:
-        # TODO: Connect to the message broker using the given broker address (host)
-        # Use the virtual host (vhost) and credential information (credentials),
-        # if provided
-
-        # TODO: Setup the channel and exchange
         credentials = pika.PlainCredentials(fullcred[0], fullcred[1])
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', virtual_host=vhost,credentials=credentials))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=ipaddr, 
+                                                    virtual_host=vhost,
+                                                    credentials=credentials))
         channel = connection.channel()
-        etype='pi_utilization'
         channel.exchange_declare(exchange=etype,type='direct')
 
         # Loop until the application is asked to quit
@@ -160,9 +128,8 @@ try:
         if channel is not None:
             channel.close()
         # For closing the connection gracefully see: http://pika.readthedocs.org/en/0.9.14/modules/connection.html#pika.connection.Connection.close
-        if message_broker is not None:
-            message_broker.close()
-        connection.close()
+        if connection is not None:
+            connection.close()
 except ValueError:
     print "you dun fucked up"
 #except Exception, ee:
