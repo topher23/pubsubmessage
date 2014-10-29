@@ -5,13 +5,13 @@ implemented for the stats client (i.e. pistatsview).
 This is the basic algorithm you will want to follow, although there are other
 ways to implement this pseudo code.
 """
-
 import json
 import pika
 import pika.channel
 import pika.exceptions
 import signal
 import sys
+import argparse
 
 # Create a data structure for holding the maximum and minimum values
 stats_history = { "cpu": {"max": 0.0, "min": float("inf"), "current": 0.0},
@@ -137,6 +137,8 @@ try:
     # The topic to subscribe to
     topic = None
 
+    queue = 'ece4564'
+
     # TODO: Parse the command line arguments
     parser = argparse.ArgumentParser(description = "Parses network and CPU statistics and publishes to RabbitMQ Server")
     parser.add_argument("-b", "--messagebroker",  help="This is the IP address or named address of the message broker to connect to", required=True)
@@ -146,11 +148,12 @@ try:
     args = parser.parse_args()
 
     # Ensure that the user specified the required arguments
-    if host is None:
+    key = args.routingkey
+    if args.messagebroker is None:
         print "You must specify a message broker to connect to"
         sys.exit()
 
-    if topic is None:
+    if args.routingkey is None:
         print "You must specify a topic to subscribe to"
         sys.exit()
 
@@ -160,9 +163,9 @@ try:
         # TODO: Connect to the message broker using the given broker address (host)
         # Use the virtual host (vhost) and credential information (credentials),
         # if provided
-
+        """
         # TODO: Setup the channel and exchange
-        channel = # Setup channel from connected message broker
+        channel = 'rock' # Setup channel from connected message broker
 
         # Setup signal handlers to shutdown this app when SIGINT or SIGTERM is
         # sent to this app
@@ -194,8 +197,29 @@ try:
 
         # TODO: Bind your queue to the message exchange, and register your
         #       new message event handler
-
+        """
         # TODO: Start pika's event loop
+        print "here"
+        etype='pi_utilization'
+
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        channel = connection.channel()
+
+
+        channel.exchange_declare(exchange=etype, type='direct')
+        result = channel.queue_declare(exclusive=True)
+        qname = result.method.queue
+
+        channel.queue_bind(exchange=etype,queue=qname,routing_key=key)
+        print ' [*] Waiting for messages. To exit press CTRL+C'
+
+        def callback(ch, method, properties, body):
+            print " [x] %r:%r" % (method.routing_key, body,)
+
+        channel.basic_consume(callback, queue = queue, no_ack=True)
+        channel.start_consuming()
+
+
 
     except pika.exceptions.AMQPError, ae:
         print "Error: An AMQP Error occured: " + ae.message
@@ -206,14 +230,16 @@ try:
     except Exception, eee:
         print "Error: An unexpected exception occured: " + eee.message
 
-    finally:
+#    finally:
         # TODO: Attempt to gracefully shutdown the connection to the message broker
         # For closing the channel gracefully see: http://pika.readthedocs.org/en/0.9.14/modules/channel.html#pika.channel.Channel.close
-        if channel is not None:
-            channel.close()
+#        if channel is not None:
+#            channel.close()
         # For closing the connection gracefully see: http://pika.readthedocs.org/en/0.9.14/modules/connection.html#pika.connection.Connection.close
-        if message_broker is not None:
-            message_broker.close()
+#        if message_broker is not None:
+#            message_broker.close()
 
-except Exception, ee:
+except ValueError:
+    print "you dun fucked up"
+#except Exception, ee:
     # Add code here to handle the exception, print an error, and exit gracefully
