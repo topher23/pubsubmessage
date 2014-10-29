@@ -16,6 +16,9 @@ import sys
 # Create a data structure for holding the maximum and minimum values
 stats_history = { "cpu": {"max": 0.0, "min": float("inf"), "current": 0.0},
                   "net": dict()}
+prevMax = {}
+prevMin = {}
+cpuValues = {}
 
 class StatsClientChannelHelper:
     """
@@ -73,7 +76,7 @@ def on_new_msg(channel, delivery_info, msg_properties, msg):
 
     # Parse the JSON message into a dict
     try:
-        stats = json.loads(msg)
+        data = json.loads(msg)
 
         # Check that the message appears to be well formed
         if "cpu" not in stats:
@@ -83,46 +86,35 @@ def on_new_msg(channel, delivery_info, msg_properties, msg):
             print "Warning: ignoring message: missing 'net' field"
 
         else:
-            # Message appears well formed
+            if cpuValues == {}:
+                cpuValues = {"minimum": .5, "maximum": 0}
 
-            # Evaluate CPU field for max/min status
-            # TODO: Store new global max if stats["cpu"] > stats_history["cpu"]["max"]
+            if cpuValues['minimum'] > data['cpu']:
+                cpuValues['minimum'] = data['cpu']
 
-            # TODO: Store new global min if stats["cpu"] < stats_history["cpu"]["min"]
+            if cpuValues['maximum'] < data['cpu']:
+                cpuValues['maximum'] = data['cpu']
 
-            # Store the current value
-            stats_history["cpu"]["current"] = stats["cpu"]
+            print 'cpu: ' + str(data['cpu']) + ' [Hi: ' + str(cpuValues['maximum']) + ', Lo: ' + str(cpuValues['minimum']) + ']'
+            for interface in data['net']:
+                if interface not in prevMax:
+                    prevMax[interface] = {'tx' : 0, 'rx' : 0}  
+                    prevMin[interface] = {'tx' : 0, 'rx' : 0}  
 
-            # evaluate NET field for max/min status
-            for iface in stats["net"].keys():
+                if prevMax[interface]['tx'] < data['net'][interface]['tx']:
+                    prevMax[interface]['tx'] = data['net'][interface]['tx']
 
-                # Has the current iface been seen before?
-                if iface not in stats_history["net"]:
-                    # No, create a new entry for the iface
-                    stats_history["net"][iface] = {"rx": {"max": 0.0, "min": float("inf"), "current": 0.0},
-                                                   "tx": {"max": 0.0, "min": float("inf"), "current": 0.0}
-                                                  }
+                if prevMax[interface]['rx'] < data['net'][interface]['rx']:
+                    prevMax[interface]['rx'] = data['net'][interface]['rx']
 
-                # Check if the iface key is well formed
-                if "rx" not in stats["net"][iface]:
-                    print "Warning: ignoring interface: " + iface + ": no 'rx' field"
-                    continue
+                if prevMin[interface]['tx'] > data['net'][interface]['tx']:
+                    prevMin[interface]['tx'] = data['net'][interface]['tx']
 
-                elif "tx" not in stats["net"][iface]:
-                    print "Warning: ignoring interface: " + iface + ": no 'tx' field"
-                    continue
+                if prevMin[interface]['rx'] > data['net'][interface]['rx']:
+                    prevMin[interface]['rx'] = data['net'][interface]['rx']
 
-                else:
-                    # Evaluate max and min for each iface mode
-                    for iface_mode in ("rx", "tx"):
-                        # TODO: Store new global max if stats["net"][iface][iface_mode] > stats_history["net"][iface][iface_mode]["max"]
+                print interface + ': ' 'rx=' + str(data['net'][interface]['rx'])  +' B/s' + ' ' + ('[Hi: ' + str(prevMax[interface]['rx']) + ' B/s' + ', ') + ('Lo: ' + str(prevMin[interface]['rx']) + ' B/s' + '] ') + ', tx=' + str(data['net'][interface]['rx']) +' B/s' + ' ' + ('[Hi: ' + str(prevMax[interface]['rx']) + ' B/s' + ', ')   + ('Lo: ' + str(prevMin[interface]['rx'])  + ' B/s' + ']')
 
-                        # TODO: Store new global min if stats["net"][iface][iface_mode] < stats_history["net"][iface][iface_mode]["min"]
-
-                        # Store the current value
-                        stats_history["net"][iface][iface_mode]["current"] = stats["net"][iface][iface_mode]
-
-            # TODO: Print the max, min, and current stats value to stdout
 
     except ValueError, ve:
         # Thrown by json.loads() if it could not parse a JSON object
