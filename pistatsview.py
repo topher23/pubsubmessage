@@ -18,7 +18,7 @@ stats_history = { "cpu": {"max": 0.0, "min": float("inf"), "current": 0.0},
                   "net": dict()}
 prevMax = {}
 prevMin = {}
-cpuValues = {}
+cpuValues = {"minimum": .5, "maximum": 0}
 
 class StatsClientChannelHelper:
     """
@@ -79,16 +79,13 @@ def on_new_msg(channel, delivery_info, msg_properties, msg):
         data = json.loads(msg)
 
         # Check that the message appears to be well formed
-        if "cpu" not in stats:
+        if "cpu" not in data:
             print "Warning: ignoring message: missing 'cpu' field"
 
-        elif "net" not in stats:
+        elif "net" not in data:
             print "Warning: ignoring message: missing 'net' field"
 
         else:
-            if cpuValues == {}:
-                cpuValues = {"minimum": .5, "maximum": 0}
-
             if cpuValues['minimum'] > data['cpu']:
                 cpuValues['minimum'] = data['cpu']
 
@@ -214,7 +211,7 @@ try:
         def callback(ch, method, properties, body):
             print " [x] %r:%r" % (method.routing_key, body,)
 
-        channel.basic_consume(callback, queue = qname, no_ack=True)
+        channel.basic_consume(on_new_msg, queue = qname, no_ack=True)
         channel.start_consuming()
 
 
