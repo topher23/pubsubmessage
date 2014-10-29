@@ -142,6 +142,8 @@ try:
     parser.add_argument("-k", "--routingkey", help="The routing key to use when publishing messages to the message broker", required=True)
     args = parser.parse_args()
 
+    fullcred = args.c
+    fullcred = fullcred.split(':')
     # Ensure that the user specified the required arguments
     key = args.routingkey
     if args.messagebroker is None:
@@ -196,8 +198,9 @@ try:
         # TODO: Start pika's event loop
         print "here"
         etype='pi_utilization'
-
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        credentials = pika.PlainCredentials(fullcred[0], fullcred[1])
+        cxn = pika.ConnectionParameters(host='localhost', credentials=credentials)
+        connection = pika.BlockingConnection(cxn)
         channel = connection.channel()
 
 
