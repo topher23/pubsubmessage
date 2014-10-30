@@ -132,6 +132,7 @@ try:
     parser.add_argument("-k", "--routingkey", help="The routing key to use when publishing messages to the message broker", required=True)
     args = parser.parse_args()
 
+    channel = None
     vhost = "/"
     etype='pi_utilization'
     key = args.routingkey
@@ -143,30 +144,11 @@ try:
     if args.virtualhost is not None:
     	print "cusotom virtual host"
     	vhost = args.virtualhost
-
     try:
         # TODO: Connect to the message broker using the given broker address (host)
         # Use the virtual host (vhost) and credential information (credentials),
         # if provided
-        """
-        # TODO: Setup the channel and exchange
-        channel = 'rock' # Setup channel from connected message broker
 
-        # Setup signal handlers to shutdown this app when SIGINT or SIGTERM is
-        # sent to this app
-        # For more info about signals, see: https://scholar.vt.edu/portal/site/0a8757e9-4944-4e33-9007-40096ecada02/page/e9189bdb-af39-4cb4-af04-6d263949f5e2?toolstate-701b9d26-5d9a-4273-9019-dbb635311309=%2FdiscussionForum%2Fmessage%2FdfViewMessageDirect%3FforumId%3D94930%26topicId%3D3507269%26messageId%3D2009512
-        signal_num = signal.SIGINT
-        try:
-            # Create a StatsClientChannelEvents object to store a reference to
-            # the channel that will need to be shutdown if a signal is caught
-            channel_manager = StatsClientChannelHelper(channel)
-            signal.signal(signal_num, channel_manager.stop_stats_client)
-            signal_num = signal.SIGTERM
-            signal.signal(signal_num, channel_manager.stop_stats_client)
-
-        except ValueError, ve:
-            print "Warning: Greceful shutdown may not be possible: Unsupported " \
-                  "Signal: " + signal_num
 
         # TODO: Create a queue
         # --------------------
@@ -182,13 +164,25 @@ try:
 
         # TODO: Bind your queue to the message exchange, and register your
         #       new message event handler
-        """
+        
         # TODO: Start pika's event loop
         credentials = pika.PlainCredentials(fullcred[0], fullcred[1])
         connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', 
         	                                        credentials=credentials,
         	                                        virtual_host=vhost))
         channel = connection.channel()
+        signal_num = signal.SIGINT
+        try:
+            # Create a StatsClientChannelEvents object to store a reference to
+            # the channel that will need to be shutdown if a signal is caught
+            channel_manager = StatsClientChannelHelper(channel)
+            signal.signal(signal_num, channel_manager.stop_stats_client)
+            signal_num = signal.SIGTERM
+            signal.signal(signal_num, channel_manager.stop_stats_client)
+
+        except ValueError, ve:
+            print "Warning: Greceful shutdown may not be possible: Unsupported " \
+                  "Signal: " + signal_num
 
 
         channel.exchange_declare(exchange=etype, type='direct')

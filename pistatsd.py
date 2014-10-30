@@ -5,9 +5,17 @@ from multiprocessing.pool import ThreadPool
 import json
 import pika
 import argparse
+import signal
+import atexit
+import os
+import sys
 
 
 pool = ThreadPool(processes=2)
+publish_stats=True
+
+def stop_stats_service(signal, frame):
+    sys.exit(0)
 
 
 def createJSON():
@@ -65,21 +73,16 @@ def netUsage():
             interfaces[interface] = {"rx": ((rxBytes[1] - rxBytes[0])/(times[1] - times[0])), "tx": ((txBytes[1] - txBytes[0])/(times[1] - times[0])) }
 
         return interfaces
-
-
-
-
-
-
-
-
-
-
-
-
-
+def shutdown():
+    print "I am gracefully shutting down bitch"
+    if channel is not None:
+        channel.close()
+    if message_broker is not None:
+        message_broker.close()
+    connection.close()
 try:
 
+    atexit.register(shutdown)
     # The message broker host name or IP address
     host = 'localhost'
     # The virtual host to connect to
@@ -92,7 +95,7 @@ try:
     # Setup signal handlers to shutdown this app when SIGINT or SIGTERM is
     # sent to this app
     # For more info about signals, see: https://scholar.vt.edu/portal/site/0a8757e9-4944-4e33-9007-40096ecada02/page/e9189bdb-af39-4cb4-af04-6d263949f5e2?toolstate-701b9d26-5d9a-4273-9019-dbb635311309=%2FdiscussionForum%2Fmessage%2FdfViewMessageDirect%3FforumId%3D94930%26topicId%3D3507269%26messageId%3D2009512
-    """
+    
     signal_num = signal.SIGINT
     try:
         signal.signal(signal_num, stop_stats_service)
@@ -102,7 +105,7 @@ try:
     except ValueError, ve:
         print "Warning: Greceful shutdown may not be possible: Unsupported " \
               "Signal: " + signal_num
-"""
+
     parser = argparse.ArgumentParser(description = "Parses network and CPU statistics and publishes to RabbitMQ Server")
     parser.add_argument("-b", "--messagebroker",  help="This is the IP address or named address of the message broker to connect to", required=True)
     parser.add_argument("-p", "--virtualhost", help="This is the virtual host to connect to on the message broker. If not specified, should default to the root virtual host")
@@ -138,11 +141,12 @@ try:
         channel.exchange_declare(exchange=etype,type='direct')
 
         # Loop until the application is asked to quit
-        while(1):
+        while(publish_stats):
             jsonsend = createJSON()
             channel.basic_publish(exchange=etype,routing_key=key,body=jsonsend)
             time.sleep(1)
             print jsonsend
+            print publish_stats
 
     except pika.exceptions.AMQPError, ae:
         print "Error: An AMQP Error occured: " + ae.message
@@ -153,16 +157,6 @@ try:
     except Exception, eee:
         print "Error: An unexpected exception occured: " + eee.message
 
-    finally:
-        # TODO: Attempt to gracefully shutdown the connection to the message broker
-        
-        # For closing the channel gracefully see: http://pika.readthedocs.org/en/0.9.14/modules/channel.html#pika.channel.Channel.close
-        if channel is not None:
-            channel.close()
-        # For closing the connection gracefully see: http://pika.readthedocs.org/en/0.9.14/modules/connection.html#pika.connection.Connection.close
-        if message_broker is not None:
-            message_broker.close()
-        connection.close()
 except ValueError:
     print "you dun fucked up"
 #except Exception, ee:
