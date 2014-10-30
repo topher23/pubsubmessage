@@ -110,7 +110,7 @@ def on_new_msg(channel, delivery_info, msg_properties, msg):
                 if prevMin[interface]['rx'] > data['net'][interface]['rx']:
                     prevMin[interface]['rx'] = data['net'][interface]['rx']
 
-                print interface + ': ' 'rx=' + str(data['net'][interface]['rx'])  +' B/s' + ' ' + ('[Hi: ' + str(prevMax[interface]['rx']) + ' B/s' + ', ') + ('Lo: ' + str(prevMin[interface]['rx']) + ' B/s' + '] ') + ', tx=' + str(data['net'][interface]['rx']) +' B/s' + ' ' + ('[Hi: ' + str(prevMax[interface]['rx']) + ' B/s' + ', ')   + ('Lo: ' + str(prevMin[interface]['rx'])  + ' B/s' + ']')
+                print interface + ': ' 'rx=' + str(int(data['net'][interface]['rx']))  +' B/s' + ' ' + ('[Hi: ' + str(int(prevMax[interface]['rx'])) + ' B/s' + ', ') + ('Lo: ' + str(int(prevMin[interface]['rx'])) + ' B/s' + '] ') + ', tx=' + str(int(data['net'][interface]['rx'])) +' B/s' + ' ' + ('[Hi: ' + str(int(prevMax[interface]['rx'])) + ' B/s' + ', ')   + ('Lo: ' + str(int(prevMin[interface]['rx']))  + ' B/s' + ']')
 
 
     except ValueError, ve:

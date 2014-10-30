@@ -5,7 +5,7 @@ from multiprocessing.pool import ThreadPool
 import json
 import pika
 import argparse
-
+import signal
 
 pool = ThreadPool(processes=2)
 
@@ -70,7 +70,7 @@ try:
     # Setup signal handlers to shutdown this app when SIGINT or SIGTERM is
     # sent to this app
     # For more info about signals, see: https://scholar.vt.edu/portal/site/0a8757e9-4944-4e33-9007-40096ecada02/page/e9189bdb-af39-4cb4-af04-6d263949f5e2?toolstate-701b9d26-5d9a-4273-9019-dbb635311309=%2FdiscussionForum%2Fmessage%2FdfViewMessageDirect%3FforumId%3D94930%26topicId%3D3507269%26messageId%3D2009512
-    """
+    
     signal_num = signal.SIGINT
     try:
         signal.signal(signal_num, stop_stats_service)
@@ -80,7 +80,7 @@ try:
     except ValueError, ve:
         print "Warning: Greceful shutdown may not be possible: Unsupported " \
               "Signal: " + signal_num
-"""
+
     parser = argparse.ArgumentParser(description = "Parses network and CPU statistics and publishes to RabbitMQ Server")
     parser.add_argument("-b", "--messagebroker",  help="This is the IP address or named address of the message broker to connect to", required=True)
     parser.add_argument("-p", "--virtualhost", help="This is the virtual host to connect to on the message broker. If not specified, should default to the root virtual host")
