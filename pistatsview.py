@@ -82,7 +82,7 @@ def on_new_msg(channel, delivery_info, msg_properties, msg):
 # Guard try clause to catch any errors that aren't expected
 try:    
     # TODO: Parse the command line arguments
-    parser = argparse.ArgumentParser(description = "Parses network and CPU statistics and publishes to RabbitMQ Server")
+    parser = argparse.ArgumentParser(description = "View maximum and minimum CPU and network utilization of monitored devices via RabbitMQ server")
     parser.add_argument("-b", "--messagebroker",  help="This is the IP address or named address of the message broker to connect to", required=True)
     parser.add_argument("-p", "--virtualhost", help="This is the virtual host to connect to on the message broker. If not specified, should default to the root virtual host")
     parser.add_argument("-c", help="Use the given credentials when connecting to the message broker. The format is 'login:password'. If not specified, should default to a guest login.", required=True)
