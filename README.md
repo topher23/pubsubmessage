@@ -1,3 +1,8 @@
+The files submitted are:
+- pistatsd.py
+- pistatsview.py
+- README.md
+
 usage: pistatsview.py [-h] -b MESSAGEBROKER [-p VIRTUALHOST] -c C -k
                       ROUTINGKEY
 
@@ -46,7 +51,7 @@ to a remote RabbitMQ server. pistatsview.py must be run on a separate computer
 and connect to the RabbitMQ server with a login/password combination and will
 receive information via statistics pulled from a queue on the RabbitMQ server.
 The information received will be parsed by pistatsview.py and keep pulling stats
-from the RabbitMQ server. 
+from the RabbitMQ server. pistatsview.py must be run first 
 
 This program is dependent on the pika library in order to connect to the RabbitMQ
-server.
+server. In order to install pika you must install erlang.
