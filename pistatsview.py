@@ -21,59 +21,16 @@ prevMin = {}
 cpuValues = {"minimum": .5, "maximum": 0}
 
 class StatsClientChannelHelper:
-    """
-    This helper class is used to manage a channel and invoke event handlers when
-    signals are intercepted
-    """
-
     def __init__(self, channel):
-        """
-        Create a new StatsClientChannelEvents object
-
-        :param channel: (pika.channel.Channel) The channel object to manage
-        :raises ValueError: if channel does not appear to be valid
-        :return: None
-        """
-
         if isinstance(channel, pika.channel.Channel):
             self.__channel = channel
-
         else:
             raise ValueError("No valid channel to manage was passed in")
-
-
     def stop_stats_client(self, signal=None, frame=None):
-        """
-        Stops the pika event loop for the managed channel
-
-        :param signal: (int) A number if a intercepted signal caused this handler
-                       to be run, otherwise None
-        :param frame: A Stack Frame object, if an intercepted signal caused this
-                      handler to be run
-        :return: None
-        """
-        # TODO: Attempt to gracefully stop pika's event loop
-        # See: https://pika.readthedocs.org/en/0.9.14/modules/adapters/blocking.html#pika.adapters.blocking_connection.BlockingChannel.stop_consuming
         self.__channel.stop_consuming()
 
 
 def on_new_msg(channel, delivery_info, msg_properties, msg):
-    """
-    Event handler that processes new messages from the message broker
-
-    For details on interface for this pika event handler, see:
-    https://pika.readthedocs.org/en/0.9.14/examples/blocking_consume.html
-
-    :param channel: (pika.Channel) The channel object this message was received
-                    from
-    :param delivery_info: (pika.spec.Basic.Deliver) Delivery information related
-                          to the message just received
-    :param msg_properties: (pika.spec.BasicProperties) Additional metadata about
-                           the message just received
-    :param msg: The message received from the server
-    :return: None
-    """
-
     # Parse the JSON message into a dict
     try:
         data = json.loads(msg)
@@ -140,36 +97,19 @@ try:
     fullcred = ['guest', 'guest']
     if args.c is not None:
         fullcred = args.c.split(':')
-        print fullcred
     if args.virtualhost is not None:
-    	print "cusotom virtual host"
     	vhost = args.virtualhost
+    print ipaddr
+    print fullcred
+    print vhost
+    print key
+
     try:
-        # TODO: Connect to the message broker using the given broker address (host)
-        # Use the virtual host (vhost) and credential information (credentials),
-        # if provided
-
-
-        # TODO: Create a queue
-        # --------------------
-        # It is up to you to determine what type of queue to create...
-        # For example, if you create an exclusive queue, then the queue will
-        # only exist as long as your client is connected
-        # or you could create a queue that will continue to receive messages
-        # even after your client app disconnects.
-        #
-        # In the short report, you should document what type of queue you create
-        # and the series of events that occur at your client and the message broker
-        # when your client connects or disconnects. (Slide 10).
-
-        # TODO: Bind your queue to the message exchange, and register your
-        #       new message event handler
-        
-        # TODO: Start pika's event loop
         credentials = pika.PlainCredentials(fullcred[0], fullcred[1])
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', 
-        	                                        credentials=credentials,
-        	                                        virtual_host=vhost))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=ipaddr, 
+        	                                        port=5672,
+        	                                        virtual_host=vhost,
+        	                                        credentials=credentials))
         channel = connection.channel()
         signal_num = signal.SIGINT
         try:
