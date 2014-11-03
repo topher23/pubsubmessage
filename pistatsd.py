@@ -14,10 +14,12 @@ import sys
 pool = ThreadPool(processes=2)
 publish_stats=True
 
+# Ends program gracefully
 def stop_stats_service(signal, frame):
     sys.exit(0)
 
 
+# Creates JSON object to be sent to RabbitMQ Server
 def createJSON():
     cpuUsageThread = pool.apply_async(cpuUsage)
     netUsageThread= pool.apply_async(netUsage)
@@ -31,6 +33,7 @@ def createJSON():
     data_string = json.dumps(data)
     return data_string
 
+# Parses CPU utilization information
 def cpuUsage():
     with open('/proc/uptime', 'r') as uptime:
         time1 = uptime.readline().split()
@@ -44,6 +47,8 @@ def cpuUsage():
 
         utilization = 1 - (idleDelta/upDelta)
         return utilization
+
+# Parses network utilization information
 def netUsage():
     with open('/proc/net/dev', 'r') as netusage:
         lines = []
@@ -73,8 +78,9 @@ def netUsage():
             interfaces[interface] = {"rx": ((rxBytes[1] - rxBytes[0])/(times[1] - times[0])), "tx": ((txBytes[1] - txBytes[0])/(times[1] - times[0])) }
 
         return interfaces
+
 def shutdown():
-    print "I am gracefully shutting down bitch"
+    print "Shutting down..."
     if channel is not None:
         channel.close()
     if message_broker is not None:
@@ -82,7 +88,7 @@ def shutdown():
     #connection.close()
 
 
-
+# Connect to RabbitMQ Server and start sending JSON information
 try:
     signal_num = signal.SIGINT
     try:
@@ -119,11 +125,11 @@ try:
     message_broker = None
     channel = None
     try:
-        # TODO: Connect to the message broker using the given broker address (host)
+        # Connect to the message broker using the given broker address (host)
         # Use the virtual host (vhost) and credential information (credentials),
         # if provided
 
-        # TODO: Setup the channel and exchange
+        # Setup the channel and exchange
         credentials = pika.PlainCredentials(fullcred[0], fullcred[1])
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=ipaddr, 
         	                                        port=5672,
@@ -141,8 +147,9 @@ try:
             print jsonsend
             print publish_stats
 
+    # Pika Error Handling
     except pika.exceptions.AMQPError, ae:
-        print "Error: An AMQP Error occured: " + ae.message
+        print "Error: An AMQP Error occured: One or more of your parameters was incorect and/or a connection could not be made"
 
     except pika.exceptions.ChannelError, ce:
         print "Error: A channel error occured: " + ce.message
@@ -151,7 +158,4 @@ try:
         print "Error: An unexpected exception occured: " + eee.message
 
 except ValueError:
-    print "you dun fucked up"
-#except Exception, ee:
-# Add code here to handle the exception, print an error, and exit gracefully
-#
+    print "Error: A parameter was not of the correct type specified."

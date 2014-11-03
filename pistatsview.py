@@ -14,11 +14,10 @@ import sys
 import argparse
 
 # Create a data structure for holding the maximum and minimum values
-stats_history = { "cpu": {"max": 0.0, "min": float("inf"), "current": 0.0},
-                  "net": dict()}
 prevMax = {}
 prevMin = {}
 cpuValues = {"minimum": .5, "maximum": 0}
+
 
 class StatsClientChannelHelper:
     def __init__(self, channel):
@@ -30,6 +29,7 @@ class StatsClientChannelHelper:
         self.__channel.stop_consuming()
 
 
+# Callback event for when a new message is received from the RabbitMQ Server
 def on_new_msg(channel, delivery_info, msg_properties, msg):
     # Parse the JSON message into a dict
     try:
@@ -81,7 +81,7 @@ def on_new_msg(channel, delivery_info, msg_properties, msg):
 
 # Guard try clause to catch any errors that aren't expected
 try:    
-    # TODO: Parse the command line arguments
+    # Parse the command line arguments
     parser = argparse.ArgumentParser(description = "View maximum and minimum CPU and network utilization of monitored devices via RabbitMQ server")
     parser.add_argument("-b", "--messagebroker",  help="This is the IP address or named address of the message broker to connect to", required=True)
     parser.add_argument("-p", "--virtualhost", help="This is the virtual host to connect to on the message broker. If not specified, should default to the root virtual host")
@@ -104,6 +104,7 @@ try:
     print vhost
     print key
 
+# Attempt to create binding to queue on RabbitMQ Server through routing key
     try:
         credentials = pika.PlainCredentials(fullcred[0], fullcred[1])
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=ipaddr, 
@@ -147,16 +148,6 @@ try:
     except Exception, eee:
         print "Error: An unexpected exception occured: " + eee.message
 
-#    finally:
-        # TODO: Attempt to gracefully shutdown the connection to the message broker
-        # For closing the channel gracefully see: http://pika.readthedocs.org/en/0.9.14/modules/channel.html#pika.channel.Channel.close
-#        if channel is not None:
-#            channel.close()
-        # For closing the connection gracefully see: http://pika.readthedocs.org/en/0.9.14/modules/connection.html#pika.connection.Connection.close
-#        if message_broker is not None:
-#            message_broker.close()
 
 except ValueError:
-    print "you dun fucked up"
-#except Exception, ee:
-    # Add code here to handle the exception, print an error, and exit gracefully
+    print "Error: A parameter was not of the correct type specified."
