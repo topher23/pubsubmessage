@@ -42,7 +42,7 @@ def cpuUsage():
         idleDelta = float(time2[1])- float(time1[1])
 
 
-        utilization = 1 - (idleDelta/(upDelta)
+        utilization = 1 - (idleDelta/upDelta)
         return utilization
 def netUsage():
     with open('/proc/net/dev', 'r') as netusage:
