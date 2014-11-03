@@ -1,7 +1,8 @@
 The files submitted are:
 - pistatsd.py
 - pistatsview.py
-- README.md
+- topher23_camspill_assignment2report.pdf
+- topher23_camspill_assignment2presentation.pdf
 
 usage: pistatsview.py [-h] -b MESSAGEBROKER [-p VIRTUALHOST] -c C -k
                       ROUTINGKEY
